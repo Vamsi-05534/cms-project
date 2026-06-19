@@ -41,6 +41,7 @@ def new_post():
     form = PostForm(request.form)
 
     if form.validate_on_submit():
+
         post = Post()
 
         post.save_changes(
@@ -167,9 +168,16 @@ def authorized():
             scopes=Config.SCOPE,
             redirect_uri=url_for(
                 "authorized",
-                _external=True
+                _external=True,
+                _scheme="https"
             )
         )
+
+        if not result:
+            return render_template(
+                "auth_error.html",
+                result={"error": "No token returned"}
+            )
 
         if "error" in result:
             return render_template(
@@ -185,7 +193,8 @@ def authorized():
             username="admin"
         ).first()
 
-        login_user(user)
+        if user:
+            login_user(user)
 
         app.logger.info(
             "Microsoft login successful"
@@ -209,7 +218,11 @@ def logout():
             Config.AUTHORITY +
             "/oauth2/v2.0/logout" +
             "?post_logout_redirect_uri=" +
-            url_for("login", _external=True)
+            url_for(
+                "login",
+                _external=True,
+                _scheme="https"
+            )
         )
 
     return redirect(url_for('login'))
@@ -256,6 +269,7 @@ def _build_auth_url(
         state=state,
         redirect_uri=url_for(
             "authorized",
-            _external=True
+            _external=True,
+            _scheme="https"
         )
     )
